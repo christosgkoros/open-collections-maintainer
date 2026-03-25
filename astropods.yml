@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://astropods.ai/schema/package.json
+spec: package/v1
+name: open-collections-maintainer
+
+agent:
+  build:
+    context: .
+    dockerfile: Dockerfile
+
+models:
+  ollama:
+    provider: ollama
+    models: [llama3.1:8b]
+
+dev:
+  interfaces:
+    messaging:
+      adapters: [web]
