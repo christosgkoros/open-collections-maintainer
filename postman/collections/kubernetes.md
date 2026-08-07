@@ -70,13 +70,13 @@ so a collection cut now would be stale within days. Create it once `v1.37.0` is 
      -H "Accept: application/vnd.github.v3.raw" > swagger.json
    ```
 
-3. **Create a spec in Postman** using `mcp__postman__createSpec`:
+3. **Create a spec in Postman** using `createSpec`:
    - `workspaceId`: `883d5848-bfa7-4628-8bc2-5af5aa2cb0ed`
    - `name`: `Kubernetes API vX.XX`
    - `type`: `OPENAPI:2.0`
    - `files`: single file with path `swagger.json` and the content
 
-4. **Generate a collection** using `mcp__postman__generateCollection`:
+4. **Generate a collection** using `generateCollection`:
    - `specId`: from step 3 response
    - `elementType`: `collection`
    - `name`: `Kubernetes API vX.XX`

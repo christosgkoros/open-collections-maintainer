@@ -1,57 +1,72 @@
-# open-collections-maintainer
+# CLAUDE.md
 
-You are the maintainer of the open collections project. Your purpose is to keep up-to-date Postman collections for projects that don't publish their own. You weekly observe these projects' documentation and update workspaces and collections.
+**Read [`AGENTS.md`](AGENTS.md) first.** It holds the project contract — scope, maintained
+projects, workflows, and the Postman MCP limitations. Claude Code does not load `AGENTS.md`
+automatically, so read it at the start of any session that touches collections.
 
-## Tools
+This file covers only what is specific to running that work in Claude Code.
 
-- **Postman:** Always use the Postman MCP server (mcp.postman.com) for all Postman interactions. Never use CLI or direct API calls.
-- **GitHub:** Always use `gh` CLI for GitHub interactions.
+## Authenticate Postman before starting
 
-## Maintained Projects
+The Postman MCP server (`mcp.postman.com`) uses interactive OAuth. If Postman tools fail or the
+server shows as disconnected, run `/mcp` and re-authenticate. There is no `.mcp.json` in this
+repo — the credential lives in the local Claude install, not in version control.
 
-The full list — 16 workspaces, 30 collections, each with its root source and current sync
-status — lives in `postman/collections/INVENTORY.md`. Start there.
+## Postman tools are deferred
 
-The authoritative scope is the `WORKSPACES` array in the HTML of <https://opencollections.tech/>.
-Some public workspaces on the team are talk/blog companions and are deliberately out of scope.
+Postman tools are not loaded into context upfront; only their names are. Calling one before
+loading its schema fails with `InputValidationError`. Load them with `ToolSearch` first:
 
-The two projects below have their own multi-version workflows and are documented separately.
+```
+ToolSearch("select:mcp__postman__getCollection,mcp__postman__updateCollectionRequest")
+```
 
-### Dapr
+Use the `select:` form with exact names — keyword search wastes a round trip. Tools are named
+`mcp__postman__<operation>`; `AGENTS.md` refers to the bare operation names (`createSpec`,
+`syncCollectionWithSpec`, …).
 
-- **Collection:** `6045849-ce93de13-a186-4a2a-b419-1231d4c20e0d`
-- **Source repo:** `dapr/docs` (default branch tracks latest version)
-- **Docs path:** `daprdocs/content/en/reference/api/`
-- **Current version:** 1.18
-- **Update strategy:** Compare endpoints and update existing collection in-place
-- **Details:** See `postman/collections/dapr.md`
+Load these together at the start of a sync rather than one at a time:
 
-### Kubernetes API
+- Read: `getCollection`, `getCollections`, `getWorkspaces`, `getAllSpecs`, `getSpecFiles`,
+  `getSpecCollections`, `searchPostmanElements`
+- Write: `updateCollectionRequest`, `createCollectionRequest`, `createCollectionResponse`,
+  `updateSpecFile`, `syncCollectionWithSpec`, `createSpec`, `generateCollection`
 
-- **Workspace:** `883d5848-bfa7-4628-8bc2-5af5aa2cb0ed`
-- **Source repo:** `kubernetes/kubernetes` (`release-x.x` branches)
-- **Spec path:** `api/openapi-spec/swagger.json`
-- **Spec type:** OpenAPI 2.0
-- **Latest version:** 1.36 (only cut a collection once the version is GA — check `releases/latest`)
-- **Update strategy:** One collection per version — create spec from swagger.json, then generate collection
-- **Details:** See `postman/collections/kubernetes.md`
+Some schemas are very large (`putCollection`, `createCollection`). Avoid loading those unless
+actually needed.
 
-## Workflows
+## Reading collections without flooding context
 
-### Dapr (single collection, updated in-place)
+`getCollection` defaults to a lightweight map (metadata + recursive `itemRefs`) — use that.
+`model=minimal` gives root-level IDs plus collection auth and variables. Avoid `model=full` on
+large collections.
 
-1. Check the source repo default branch for the latest version
-2. Fetch all API reference docs from the repo
-3. Compare endpoints with the existing Postman collection
-4. Update changed/new requests via Postman MCP tools
-5. Document changes in the project's collection doc under `postman/collections/`
-6. Commit and push changes to this repo
+To find a specific request's URL or body without fetching the whole collection, use
+`searchPostmanElements` filtered by collection:
 
-### Kubernetes (one collection per version)
+```
+entityType: "requests", ownership: "all",
+filters: {"$and":[{"collectionId":{"$eq":"6045849-<uuid>"}}]}
+```
 
-1. Check for new `release-x.x` branches in `kubernetes/kubernetes`
-2. For each new version, fetch `api/openapi-spec/swagger.json` from the branch
-3. Create spec in Postman workspace via `createSpec` (type `OPENAPI:2.0`)
-4. Generate collection from spec via `generateCollection` (folder strategy: `Tags`)
-5. Update `postman/collections/kubernetes.md` with the new version entry
-6. Commit and push changes to this repo
+Note the ID forms differ between tools: `updateCollectionRequest` and `createCollectionRequest`
+take a **bare** collection UUID, while `getCollection` and `syncCollectionWithSpec` take the
+**`6045849-` prefixed** UID.
+
+## Large spec files
+
+`updateSpecFile` takes content as a string, so pushing a spec means reproducing the whole file in
+the tool call. Minify first (`json.dumps(separators=(',',':'))`) and check the size — anything
+past ~60 KB is impractical and risky to transcribe. Invalid JSON is rejected outright, but a
+valid-but-mistyped spec will sync silently. Always verify the result by re-reading the collection.
+
+## Permissions
+
+`.claude/settings.local.json` allows `Bash(gh api *)`. Sync work leans heavily on `gh api` and
+`curl` for upstream fetches; add rules there rather than approving repeatedly.
+
+## Waiting on async Postman tasks
+
+`syncCollectionWithSpec` returns `202` immediately. Foreground `sleep` is blocked — use
+`Bash(run_in_background: true)` with a `sleep`, or `Monitor`. Then re-read the collection to
+confirm; there is no tool to poll a collection-sync task.

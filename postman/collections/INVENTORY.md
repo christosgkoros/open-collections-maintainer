@@ -1,113 +1,285 @@
 # Open Collections — Inventory
 
-Master tracking list for everything published under the **Open Collections** Postman team
-(`opencollections`, team ID `3476680`) and surfaced on <https://opencollections.tech/>.
+Complete registry of everything published under the **Open Collections** Postman team and
+surfaced on <https://opencollections.tech/>. This is the source of truth for what exists, where
+each collection comes from, and what state it is in.
 
-- **Portal:** <https://opencollections.tech/> — the `WORKSPACES` array in its HTML is the
-  authoritative list of what is published. Workspaces that exist in Postman but are not in
-  that array are not part of Open Collections (see [Not published](#not-published)).
+- **Team:** `opencollections` · team ID `3476680` · owner user ID `6045849`
+- **Portal:** <https://opencollections.tech/> — the `WORKSPACES` array in its HTML defines scope
 - **Public profile:** <https://www.postman.com/opencollections>
 - **Totals:** 16 workspaces · 30 collections · 7 categories
 - **Last full sync:** 2026-08-07
 
-## Collections
+Collection UIDs are `6045849-<uuid>`. Workspace and spec IDs are bare UUIDs.
 
-Legend for **Status**: `in sync` = verified against the root source on the date above ·
-`drift` = root source has moved ahead · `manual` = no machine-readable root source, curated by hand.
+**Status legend** — `in sync`: verified against root source on the date above · `drift`: root
+source has moved ahead · `manual`: no machine-readable root source · `blocked`: sync attempted
+and did not apply.
 
-### Infrastructure (1 workspace)
+---
+
+## Infrastructure
+
+### Dapr API
+
+- **Workspace:** `c2e6df24-da0a-4c94-bdcb-94adb011a212`
+- **Root source:** [`dapr/docs`](https://github.com/dapr/docs) branch `v1.18`, path
+  `daprdocs/content/en/reference/api/` (17 markdown files)
+- **Sync method:** docs diff → hand-patch requests. No spec involved.
+- **Details:** [`dapr.md`](dapr.md)
+
+| Collection | UID | Requests | Status |
+| --- | --- | --- | --- |
+| Dapr API | `6045849-ce93de13-a186-4a2a-b419-1231d4c20e0d` | 66 across 15 folders + 1 at root | **in sync (v1.18)** |
+
+Open items: `info.description` still reads `_Version: 1.15_`; the new "Shutdown sidecar" request
+sits at the collection root and needs a `Shutdown API` folder.
+
+### Kubernetes API
+
+- **Workspace:** `883d5848-bfa7-4628-8bc2-5af5aa2cb0ed`
+- **Root source:** [`kubernetes/kubernetes`](https://github.com/kubernetes/kubernetes)
+  `release-x.x` branches, path `api/openapi-spec/swagger.json` (OpenAPI 2.0, ~4 MB)
+- **Sync method:** one collection per GA version — `createSpec` then `generateCollection`
+- **Environment:** `Local`, with a `token` variable for auth
+- **Details:** [`kubernetes.md`](kubernetes.md)
+
+| Version | Collection UID | Spec ID | Status |
+| --- | --- | --- | --- |
+| v1.29 | `6045849-58a070f1-2c72-4f9e-9a51-6fc644b1c95d` | — | frozen |
+| v1.30 | `6045849-1f1d88ed-29bd-4eee-8880-feb9c9f84a50` | — | frozen |
+| v1.31 | `6045849-389bb600-d473-449d-85e1-a11f4b87de79` | — | frozen |
+| v1.32 | `6045849-73802104-74e4-4566-b1ac-c59dc0f4f355` | — | frozen |
+| v1.33 | `6045849-f247f85f-45b1-4252-a91d-ee6a0922a655` | — | frozen |
+| v1.34 | `6045849-a51a17aa-2431-4584-a282-de1d3dab513e` | — | frozen |
+| v1.35 | `6045849-72134652-d0a4-4706-b310-96a36a72a9eb` | — | frozen |
+| v1.36 | `6045849-c4b570c3-3fc5-42c3-8959-37f270bcb4e7` | `246f8a3e-b11d-46e4-825e-927af6441480` | **in sync** (1123 ops, 771 defs) |
+
+Open items: duplicate orphan `6045849-e38ebf9d-9b6e-436b-be18-194ef2a2444f` needs deleting;
+v1.36 is missing from the portal's `WORKSPACES` array; v1.37 exists as a branch but is **not GA**
+(newest tag `v1.36.3`) so no collection yet.
+
+---
+
+## Social
+
+### Social Media Flow
+
+- **Workspace:** `1173303e-d847-4219-9d0d-c6c3362ddabf`
+- **Nature:** all six are **forks of upstream community collections**, not spec-generated. There
+  is nothing to diff mechanically — review against vendor docs by hand.
+
+| Collection | UID | Forked from | Vendor docs |
+| --- | --- | --- | --- |
+| Bluesky API | `6045849-e303490f-1190-4da8-9b34-080b81f485b6` | `6045849-788308df-700e-46b9-bf1d-5866e41620e2` | <https://docs.bsky.app/> |
+| LinkedIn Content APIs | `6045849-661a02fd-19ec-4459-b2a8-38928941bb44` | `17563548-d647a145-ed20-464a-b414-fa596f6ed06e` | [Posts API](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api) |
+| Mastodon — Post Status | `6045849-8b762d32-5a4d-41c9-80c5-1bb1a4015bf3` | `35240-33c44776-6125-46e9-9d9f-7857f76ac231` | <https://docs.joinmastodon.org/methods/statuses/> |
+| OpenAI | `6045849-52eba9cd-d930-4b78-b969-9e443a004a64` | `13183464-90abb798-cb85-43cb-ba3a-ae7941e968da` | [`openai/openai-openapi`](https://github.com/openai/openai-openapi) `openapi.yaml` |
+| Threads API | `6045849-fa9543e1-caa3-4747-9514-cd1a00938903` | `6045849-892f65cb-352c-4217-8ba8-26ffae0723af` | <https://developers.facebook.com/docs/threads> |
+| Twitter API v2 | `6045849-841c43d0-5967-42a3-b693-1b91bd600ee4` | `9956214-784efcda-ed4c-4491-a4c0-a26470a67400` | <https://docs.x.com/x-api/introduction> |
+
+Status: **manual** for all six. Note OpenAI is the one with a real machine-readable source
+(`openai/openai-openapi`) — it could be converted to a spec-backed collection if wanted.
+
+---
+
+## Entertainment
+
+### Spotify API
+
+- **Workspace:** `abb28c01-be84-4ff1-a79f-4968a23e77b6`
+- **Collection:** `6045849-7d49cd37-a739-4295-a98f-494a53fb0078`
+- **Spec:** `2f284b74-d974-4e23-8b7a-9d5878fb47a6` (OpenAPI 3.0, created 2025-04-23) — `in-sync`
+- **Root source:** Spotify publishes no official OpenAPI. Docs:
+  <https://developer.spotify.com/documentation/web-api>. Community spec:
+  [`sonallux/spotify-web-api`](https://github.com/sonallux/spotify-web-api)
+  → `official-spotify-open-api.yml` (upstream last pushed 2026-07-24)
+- **Status:** needs review — spec-linked collection reports `in-sync`, but the community source
+  has moved since the spec was created. Not yet diffed.
+
+### Radarr
+
+- **Workspace:** `ce5e4601-f944-4759-b03f-74598c308157`
+- **Collection:** `6045849-e8686ec6-e032-42c0-b0ef-59834ace8aa4`
+- **Spec:** `7481b1ee-c2f5-459c-a23b-419653988a59` (OpenAPI 3.0, root file `index.yaml`) — `in-sync`
+- **Root source:** [`Radarr/Radarr`](https://github.com/Radarr/Radarr) `develop:src/Radarr.Api.V3/openapi.json`
+  (~302 KB raw / 145 KB minified)
+- **Status:** **drift** — 236 ops in spec vs 237 upstream. Missing `GET /api/v3/qualitydefinition/limits`.
+
+### Sonarr
+
+- **Workspace:** `96bfa815-9da6-49c2-9d86-3ba980ac05ca`
+- **Collection:** `6045849-d4e91ced-502c-4fed-99d0-66688c31e52a`
+- **Spec:** none — collection was not generated from a Postman spec
+- **Root source:** [`Sonarr/Sonarr`](https://github.com/Sonarr/Sonarr) `develop:src/Sonarr.Api.V3/openapi.json`
+- **Status:** **in sync** — 234 ops, unchanged upstream since the collection was built (2024-12-19)
+
+---
+
+## Security & Auth
+
+### OAuth 2.0 Authorization Framework
+
+- **Workspace:** `b740d77d-f22d-496f-b16b-d66f131a0a5f`
+- **Nature:** hand-authored from RFC / draft text. No spec.
 
 | Collection | UID | Root source | Status |
 | --- | --- | --- | --- |
-| Dapr API | `6045849-ce93de13-a186-4a2a-b419-1231d4c20e0d` | [`dapr/docs`](https://github.com/dapr/docs) `v1.18` → `daprdocs/content/en/reference/api/` | in sync (v1.18) |
-| Kubernetes API v1.29 | `6045849-58a070f1-2c72-4f9e-9a51-6fc644b1c95d` | `kubernetes/kubernetes` `release-1.29` → `api/openapi-spec/swagger.json` | in sync (frozen) |
-| Kubernetes API v1.30 | `6045849-1f1d88ed-29bd-4eee-8880-feb9c9f84a50` | `release-1.30` | in sync (frozen) |
-| Kubernetes API v1.31 | `6045849-389bb600-d473-449d-85e1-a11f4b87de79` | `release-1.31` | in sync (frozen) |
-| Kubernetes API v1.32 | `6045849-73802104-74e4-4566-b1ac-c59dc0f4f355` | `release-1.32` | in sync (frozen) |
-| Kubernetes API v1.33 | `6045849-f247f85f-45b1-4252-a91d-ee6a0922a655` | `release-1.33` | in sync (frozen) |
-| Kubernetes API v1.34 | `6045849-a51a17aa-2431-4584-a282-de1d3dab513e` | `release-1.34` | in sync (frozen) |
-| Kubernetes API v1.35 | `6045849-72134652-d0a4-4706-b310-96a36a72a9eb` | `release-1.35` | in sync (frozen) |
-| Kubernetes API v1.36 | `6045849-c4b570c3-3fc5-42c3-8959-37f270bcb4e7` | `release-1.36` (spec `246f8a3e-b11d-46e4-825e-927af6441480`) | in sync — **not yet on the portal** |
+| OAuth 2.0 (RFC 6749) | `6045849-641c8217-b20c-44be-97c4-1a87bc3f5486` | [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749) | **in sync** — RFC is final |
+| OAuth 2.0 Dynamic Client Registration | `6045849-7d3000e1-d2cb-4f49-aed2-6dafa277a1a0` | [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591), [RFC 7592](https://datatracker.ietf.org/doc/html/rfc7592) | **in sync** — RFCs are final |
+| OAuth 2.1 (IETF Draft) | `6045849-50e114fb-f5aa-4a8d-bbbf-933724e4ce9f` | [`draft-ietf-oauth-v2-1`](https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/) | **drift** — built 2025-12-08; current is **rev 15** (2026-03-02) |
 
-Details: [`dapr.md`](dapr.md) · [`kubernetes.md`](kubernetes.md)
+Check the current draft revision with:
+```bash
+curl -s "https://datatracker.ietf.org/api/v1/doc/document/?name__startswith=draft-ietf-oauth-v2-1&format=json" \
+  | python3 -c "import json,sys;[print(o['name'],o['rev'],o['time']) for o in json.load(sys.stdin)['objects']]"
+```
 
-### Social (1 workspace, 6 collections)
+### MCP Authorization (OAuth)
 
-Workspace `1173303e-d847-4219-9d0d-c6c3362ddabf` — Social Media Flow.
-All six are **forks of upstream community collections**, not generated from a spec.
+- **Workspace:** `303fa3f0-51ab-4a82-8c53-122fbc5462a3`
+- **Collection:** `6045849-618428d5-f047-4052-8306-bf111991d2b4` — MCP Authorization Flow
+- **Root source:** <https://modelcontextprotocol.io/specification/draft/basic/authorization>.
+  Released revisions live in
+  [`modelcontextprotocol/modelcontextprotocol`](https://github.com/modelcontextprotocol/modelcontextprotocol)
+  under `docs/specification/` — currently `2024-11-05`, `2025-03-26`, `2025-06-18`, `2025-11-25`,
+  **`2026-07-28`**, plus `draft`.
+- **Status:** **drift** — built 2025-12-08 against the then-current draft; there is now a released
+  `2026-07-28` revision. Decide whether to track `draft` or pin to the newest release.
 
-| Collection | UID | Root source | Status |
+---
+
+## Agentic & AI
+
+### Agent Connect Protocol
+
+- **Workspace:** `47abcad3-39fe-435c-9331-b30118e53f65`
+- **Collection:** `6045849-fbe5fa08-bec8-420d-9baf-e552ef7be81c`
+- **Spec:** `cab538ae-8f3d-4575-ada2-a94a55222156` (OpenAPI 3.0, created 2025-04-23) — `in-sync`
+- **Root source:** [`agntcy/acp-spec`](https://github.com/agntcy/acp-spec) `main:openapi.json`
+  (~103 KB raw / 61 KB minified)
+- **Status:** **drift** — spec is v0.2.1, upstream is **v0.2.3**. Same 30 operations; changes are
+  schema-level only.
+
+### Agentic Commerce Protocol
+
+- **Workspace:** `692af8cc-3d2c-4496-a6ad-3a5b68ee9e87`
+- **Root source:** [`agentic-commerce-protocol/agentic-commerce-protocol`](https://github.com/agentic-commerce-protocol/agentic-commerce-protocol),
+  path `spec/<version>/openapi/`. Released versions: `2025-09-29`, `2025-12-12`, `2026-01-16`,
+  `2026-01-30`, **`2026-04-17`**, plus `unreleased`.
+- **Status:** **drift** — all three specs are pinned at `2025-09-29`, four versions behind.
+
+| Collection | UID | Spec ID | Upstream file (`2026-04-17`) |
 | --- | --- | --- | --- |
-| Bluesky API | `6045849-e303490f-1190-4da8-9b34-080b81f485b6` | fork of `6045849-788308df-…`; vendor docs <https://docs.bsky.app/> | manual |
-| LinkedIn Content APIs | `6045849-661a02fd-19ec-4459-b2a8-38928941bb44` | fork of `17563548-d647a145-…` | manual |
-| Mastodon — Post Status | `6045849-8b762d32-5a4d-41c9-80c5-1bb1a4015bf3` | fork of `35240-33c44776-…` | manual |
-| OpenAI | `6045849-52eba9cd-d930-4b78-b969-9e443a004a64` | fork of `13183464-90abb798-…` | manual |
-| Threads API | `6045849-fa9543e1-caa3-4747-9514-cd1a00938903` | fork of `6045849-892f65cb-…` | manual |
-| Twitter API v2 | `6045849-841c43d0-5967-42a3-b693-1b91bd600ee4` | fork of `9956214-784efcda-…` | manual |
+| Agentic Checkout API | `6045849-f1df2982-bd93-40c3-98ec-790edbbe33e8` | `22f6c43c-2d49-48c7-9f56-25f557d567fc` | `openapi.agentic_checkout.yaml` — 18 KB → **114 KB** |
+| Agentic Checkout Webhooks API | `6045849-22f3306b-4a16-4ad2-a6d8-d3ddb7531bc3` | `8710d7b7-afe0-4835-9c09-3c5244cd245d` | `openapi.agentic_checkout_webhook.yaml` — 4.6 KB → 11 KB |
+| Agentic Commerce — Delegate Payment API | `6045849-680ba24b-44ea-46f7-8693-1504a73af9ae` | `2848b7ec-d1a8-4c9b-bac0-bccf5ccda2ee` | `openapi.delegate_payment.yaml` — 12.6 KB → 21 KB |
 
-### Entertainment (3 workspaces)
+`2026-04-17` also adds three **entirely new surfaces** with no collection yet:
+`openapi.cart.yaml` (10.8 KB), `openapi.delegate_authentication.yaml` (31 KB),
+`openapi.feed.yaml` (23.5 KB). Syncing this workspace properly means three updates plus three
+new collections.
 
-| Collection | UID | Root source | Status |
-| --- | --- | --- | --- |
-| Spotify API | `6045849-7d49cd37-a739-4295-a98f-494a53fb0078` | spec `2f284b74-d974-4e23-8b7a-9d5878fb47a6`; upstream <https://developer.spotify.com/documentation/web-api> (community OpenAPI: `sonallux/spotify-web-api`) | needs review |
-| Radarr | `6045849-e8686ec6-e032-42c0-b0ef-59834ace8aa4` | spec `7481b1ee-c2f5-459c-a23b-419653988a59` ← [`Radarr/Radarr`](https://github.com/Radarr/Radarr) `develop:src/Radarr.Api.V3/openapi.json` | **drift** (+1 op) |
-| Sonarr | `6045849-d4e91ced-502c-4fed-99d0-66688c31e52a` | [`Sonarr/Sonarr`](https://github.com/Sonarr/Sonarr) `develop:src/Sonarr.Api.V3/openapi.json` (no Postman spec) | in sync (234 ops, unchanged) |
+Note: the webhooks spec is misspelled in Postman as **"Agentic Chekout Webhooks API"** — worth
+renaming via `updateSpecProperties`.
 
-### Security & Auth (2 workspaces, 4 collections)
+### Firecrawl API
 
-| Collection | UID | Root source | Status |
-| --- | --- | --- | --- |
-| OAuth 2.0 (RFC 6749) | `6045849-641c8217-b20c-44be-97c4-1a87bc3f5486` | [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749) | in sync (RFC is final) |
-| OAuth 2.0 Dynamic Client Registration | `6045849-7d3000e1-d2cb-4f49-aed2-6dafa277a1a0` | [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) / [RFC 7592](https://datatracker.ietf.org/doc/html/rfc7592) | in sync (RFCs are final) |
-| OAuth 2.1 (IETF Draft) | `6045849-50e114fb-f5aa-4a8d-bbbf-933724e4ce9f` | `draft-ietf-oauth-v2-1` | **drift** — built 2025-12-08, current rev **15** (2026-03-02) |
-| MCP Authorization Flow | `6045849-618428d5-f047-4052-8306-bf111991d2b4` | <https://modelcontextprotocol.io/specification/draft/basic/authorization> | **drift** — built against the 2025-12 draft; released revisions now include **2026-07-28** |
+- **Workspace:** `6208dfd5-00ce-43de-a652-e8e205b1f194`
+- **Collection:** `6045849-d5490486-fd6e-46ed-9ac4-fd3b4fb33dc7` (14 requests, 7 root folders)
+- **Spec:** `d17a6e5b-48b6-423b-99a1-9d8566870fc9` (OpenAPI 3.0, root file `index.yaml`)
+- **Environment:** `6045849-26245515-55b7-447c-89db-30ec1382d68e`
+- **Auth:** collection-level apikey, `Authorization: Bearer {{vault:FIRECRAWL_API_KEY}}`
+- **Base URL variable:** `baseUrl` = `https://api.firecrawl.dev/v1`
+- **Root source:** [`mendableai/firecrawl`](https://github.com/mendableai/firecrawl)
+  `main:apps/api/openapi.json` — 22 ops (~111 KB raw / 56 KB minified).
+  The repo also has `v1-openapi.json` (20 ops) and `openapi-v0.json` (legacy). **Use `openapi.json`.**
+- **Status:** **blocked** — spec updated to current upstream on 2026-08-07; collection sync will
+  not apply. See [Firecrawl sync](#firecrawl-spec-is-current-collection-sync-will-not-apply).
 
-### Agentic & AI (3 workspaces, 5 collections)
+---
 
-| Collection | UID | Root source | Status |
-| --- | --- | --- | --- |
-| Agent Connect Protocol | `6045849-fbe5fa08-bec8-420d-9baf-e552ef7be81c` | spec `cab538ae-8f3d-4575-ada2-a94a55222156` ← [`agntcy/acp-spec`](https://github.com/agntcy/acp-spec) `main:openapi.json` | **drift** — v0.2.1 → v0.2.3 (same 30 ops, schema-level changes) |
-| Agentic Checkout API | `6045849-f1df2982-bd93-40c3-98ec-790edbbe33e8` | spec `22f6c43c-2d49-48c7-9f56-25f557d567fc` ← [`agentic-commerce-protocol`](https://github.com/agentic-commerce-protocol/agentic-commerce-protocol) `spec/2025-09-29/openapi/openapi.agentic_checkout.yaml` | **drift** — latest spec version is `2026-04-17` |
-| Agentic Checkout Webhooks API | `6045849-22f3306b-4a16-4ad2-a6d8-d3ddb7531bc3` | spec `8710d7b7-afe0-4835-9c09-3c5244cd245d` ← `…/openapi.agentic_checkout_webhook.yaml` | **drift** — same |
-| Agentic Commerce — Delegate Payment API | `6045849-680ba24b-44ea-46f7-8693-1504a73af9ae` | spec `2848b7ec-d1a8-4c9b-bac0-bccf5ccda2ee` ← `…/openapi.delegate_payment.yaml` | **drift** — same |
-| Firecrawl API | `6045849-d5490486-fd6e-46ed-9ac4-fd3b4fb33dc7` | spec `d17a6e5b-48b6-423b-99a1-9d8566870fc9` (root file `index.yaml`) ← [`mendableai/firecrawl`](https://github.com/mendableai/firecrawl) `main:apps/api/openapi.json` | **spec updated 2026-08-07, collection sync blocked** — see [below](#firecrawl-spec-is-current-collection-sync-will-not-apply) |
+## Productivity
 
-### Productivity (2 workspaces)
+### Google Keep
 
-| Collection | UID | Root source | Status |
-| --- | --- | --- | --- |
-| Google Keep API | `6045849-a2bf7a62-86ee-4a23-84d5-c05c7c8c2cd2` | Discovery doc `https://keep.googleapis.com/$discovery/rest?version=v1` (rev `20260803`) | in sync (7/7 methods) |
-| Geekbot API | `6045849-f2751dfc-d5a4-400a-86e8-68b48d48d7eb` | <https://geekbot.com/developers/> | manual |
+- **Workspace:** `b9595039-456f-4779-b7fb-13b7e76b3f77`
+- **Collection:** `6045849-a2bf7a62-86ee-4a23-84d5-c05c7c8c2cd2` — 7 requests
+- **Root source:** Google Discovery document —
+  `https://keep.googleapis.com/$discovery/rest?version=v1` (revision `20260803`)
+- **Base URL:** `https://keep.googleapis.com/v1`
+- **Auth:** OAuth 2.0, scopes `https://www.googleapis.com/auth/keep` and `.../keep.readonly`.
+  Collection variables: `clientID`, `clientSecret`, `scopes`.
+- **Status:** **in sync** — all 7 discovery methods present: `notes.list`, `notes.create`,
+  `notes.get`, `notes.delete`, `notes.permissions.batchCreate`, `notes.permissions.batchDelete`,
+  `media.download`.
 
-### Utility (3 workspaces)
+Re-check drift with:
+```bash
+curl -s 'https://keep.googleapis.com/$discovery/rest?version=v1' \
+  | python3 -c "import json,sys;d=json.load(sys.stdin);print('rev',d['revision'])"
+```
 
-| Collection | UID | Root source | Status |
-| --- | --- | --- | --- |
-| QR Code Generator API | `6045849-732bb262-7b3a-4be6-9f8e-f6b6bc163a2f` | <https://www.qr-code-generator.com/qr-code-api/> | manual |
-| Will it rain API | `6045849-861561a6-dc30-48bc-b39f-1492c5ae44e3` | first-party project — no external root source | n/a |
-| Classter Consumer API | `6045849-7b7dadb4-8305-47f7-8a1b-1c60f2f6e6f3` | Classter platform API docs | manual |
+### Geekbot API
+
+- **Workspace:** `07a25e48-f227-414f-99bd-bfa2407bf444`
+- **Collection:** `6045849-f2751dfc-d5a4-400a-86e8-68b48d48d7eb`
+- **Root source:** <https://geekbot.com/developers/> (HTML docs, no published OpenAPI)
+- **Status:** **manual** — review by hand
+
+---
+
+## Utility
+
+### QR Code Generator API
+
+- **Workspace:** `9b429332-61e1-4903-a908-b2a9c6989caa`
+- **Collection:** `6045849-732bb262-7b3a-4be6-9f8e-f6b6bc163a2f`
+- **Root source:** <https://www.qr-code-generator.com/qr-code-api/> (HTML docs, no OpenAPI)
+- **Status:** **manual** — review by hand
+
+### Will It Rain
+
+- **Workspace:** `7c0c5cc2-ec3a-451d-ba2e-846d110d8149`
+- **Collection:** `6045849-861561a6-dc30-48bc-b39f-1492c5ae44e3`
+- **Root source:** none — first-party project, this repo's owner is the API author
+- **Status:** **n/a** — nothing upstream to track
+
+### Classter API
+
+- **Workspace:** `f91134d4-f6ff-4cd1-8fcb-23c3a68bcebf`
+- **Collection:** `6045849-7b7dadb4-8305-47f7-8a1b-1c60f2f6e6f3` — Classter Consumer API
+- **Base URL variable:** `baseUrl` = `https://consumerapi.classter.com`
+- **Auth:** bearer, `{{bearerToken}}`
+- **Root source:** the Classter Consumer API does publish a Swagger endpoint, but
+  `https://consumerapi.classter.com/swagger/v1/swagger.json` and `/swagger/index.html` both
+  return **401** without credentials. There is no anonymously reachable spec.
+- **Status:** **manual, blocked on credentials** — cannot be diffed automatically. Either obtain a
+  Classter API token for the sync job, or accept that this collection is reviewed by hand.
+
+---
 
 ## Not published
 
-Public Postman workspaces owned by the team that are deliberately **not** in the portal's
-`WORKSPACES` array, and therefore out of scope for syncing:
+Public Postman workspaces owned by the team that are **not** in the portal's `WORKSPACES` array,
+and therefore out of scope:
 
 - `ea717bba-8544-4362-a828-da033327c570` — OpenAPI to GRPC Quarkus Workspace (blog companion)
 - `7c4684b7-4c78-4695-99f1-6851c95c1463` — Athens Kubernetes Meetup (talk companion)
 
+---
+
 ## Sync procedure
 
-1. Re-read the `WORKSPACES` array from <https://opencollections.tech/> — it is the source of
-   truth for what is in scope.
-2. For each entry, resolve the root source in the table above and compare.
-   - **Spec-backed** (Radarr, Firecrawl, ACP, Agentic Commerce, Spotify, Kubernetes):
-     `updateSpecFile` with fresh upstream content, then `syncCollectionWithSpec`.
-     Check `getSpecCollections` first — it reports `in-sync` / `out-of-sync` per collection.
-   - **Docs-backed** (Dapr): diff the upstream docs between the old and new version
-     (`gh api repos/<repo>/compare/<old>...<new>`), then patch requests with
-     `updateCollectionRequest` / `createCollectionRequest`.
-   - **Manual / forks**: review by hand; there is nothing to diff automatically.
-3. Update this file and the per-project docs, then commit.
+1. Re-read the `WORKSPACES` array from <https://opencollections.tech/> — it defines scope.
+2. For each entry, compare against the root source recorded above.
+   - **Spec-backed** (Kubernetes, Radarr, Firecrawl, ACP, Agentic Commerce, Spotify): check
+     `getSpecCollections` for `in-sync` / `out-of-sync`, then `updateSpecFile` +
+     `syncCollectionWithSpec`. **Verify afterwards** — a `202` does not mean it applied.
+   - **Docs-backed** (Dapr): diff the upstream docs between versions, then patch requests.
+   - **Discovery-backed** (Google Keep): compare the discovery `revision` and method list.
+   - **Manual / forks** (Social ×6, Geekbot, QR, Classter): review by hand, nothing to diff.
+3. Update this file and the per-project docs, then commit and push.
 
 ## Known limitations
 
@@ -117,35 +289,32 @@ On 2026-08-07 the Firecrawl spec's root file (`index.yaml`, spec `d17a6e5b-…`)
 the current upstream `apps/api/openapi.json` — 22 operations. Postman accepted the update
 (`updatedAt: 2026-08-07T00:23:40Z`).
 
-`syncCollectionWithSpec` was then called **twice**. Both calls returned `202` with a task ID
-(`d5d86576-…`, `2ccdf962-…`), but after ~6 minutes the collection was unchanged: still 7 root
-folders, `updatedAt` still `2025-10-01`, and `getSpecCollections` still reports `out-of-sync`.
+`syncCollectionWithSpec` was then called **twice**. Both returned `202` with a task ID
+(`d5d86576-…`, `2ccdf962-…`), but ~10 minutes later the collection was unchanged: still 7 root
+folders, `updatedAt` still `2025-10-01`, and `getSpecCollections` still reporting `out-of-sync`.
 
-Most likely cause: this collection has **diverged** from its generated form. It carries manual
-edits — a hand-written description, collection-level `apikey` auth using
-`{{vault:FIRECRAWL_API_KEY}}`, a `baseUrl` variable, and pre-request/test script stubs. Postman
-appears to refuse a silent overwrite and wants the conflict resolved interactively.
+Most likely cause: the collection has **diverged** from its generated form. It carries manual
+edits — hand-written description, collection-level apikey auth using `{{vault:FIRECRAWL_API_KEY}}`,
+a `baseUrl` variable, and pre-request/test script stubs. Postman appears to refuse a silent
+overwrite and want the conflict resolved interactively.
 
-**To finish:** open Spec Hub → Firecrawl API → the linked collection, and accept the pending
-changes in the UI. The eight endpoints that should appear are `GET /crawl/active`,
-`POST|GET /deep-research`, `POST|GET /llmstxt`, `GET /team/token-usage`, `POST /feedback`, and
-`POST /search/{jobId}/feedback`.
+**To finish:** Spec Hub → Firecrawl API → linked collection → accept the pending changes. The
+eight endpoints that should appear are `GET /crawl/active`, `POST /deep-research`,
+`GET /deep-research/{id}`, `POST /llmstxt`, `GET /llmstxt/{id}`, `GET /team/token-usage`,
+`POST /feedback`, `POST /search/{jobId}/feedback`.
 
-There is no MCP tool to poll a collection-sync task, so the failure is only observable by
-re-reading the collection. Note this before assuming a `202` means the sync landed.
+### No delete, folder-create, or collection-PATCH tools
 
-### No delete or folder-create tools
+The Postman MCP server exposes no tool to delete a collection, create a folder inside an existing
+collection, or PATCH collection-level metadata. Consequences:
 
-The Postman MCP server exposes no tool to **delete** a collection or to **create a folder**
-inside an existing collection. Two consequences, both flagged in the per-project docs:
-
-- Orphaned collections must be deleted from the Postman UI.
-- New endpoints added to a collection that has no matching folder land at the collection root
-  and need to be dragged into place manually.
+- Orphaned collections (e.g. the duplicate Kubernetes v1.36) must be deleted in the UI.
+- New requests with no matching folder land at the collection root and need moving by hand.
+- `info.description` can only be changed via `putCollection` (full replace) or the UI.
 
 ### Large spec files
 
 `updateSpecFile` takes the spec as a string parameter, so an agent must reproduce the whole file
-in the tool call. Firecrawl (56 KB minified) was feasible. Radarr (145 KB) and the six Agentic
-Commerce files (~210 KB total) are large enough that verbatim reproduction is a real risk —
-prefer running those from a script that reads the file directly.
+in the tool call. Sizes minified: Firecrawl 56 KB (done by hand, feasible), ACP 61 KB, Radarr
+145 KB, Agentic Commerce ~210 KB across six files. Prefer a script that reads the file directly
+for anything above roughly 60 KB.
