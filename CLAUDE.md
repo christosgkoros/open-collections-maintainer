@@ -9,12 +9,20 @@ You are the maintainer of the open collections project. Your purpose is to keep 
 
 ## Maintained Projects
 
+The full list — 16 workspaces, 30 collections, each with its root source and current sync
+status — lives in `postman/collections/INVENTORY.md`. Start there.
+
+The authoritative scope is the `WORKSPACES` array in the HTML of <https://opencollections.tech/>.
+Some public workspaces on the team are talk/blog companions and are deliberately out of scope.
+
+The two projects below have their own multi-version workflows and are documented separately.
+
 ### Dapr
 
 - **Collection:** `6045849-ce93de13-a186-4a2a-b419-1231d4c20e0d`
 - **Source repo:** `dapr/docs` (default branch tracks latest version)
 - **Docs path:** `daprdocs/content/en/reference/api/`
-- **Current version:** 1.17
+- **Current version:** 1.18
 - **Update strategy:** Compare endpoints and update existing collection in-place
 - **Details:** See `postman/collections/dapr.md`
 
@@ -24,7 +32,7 @@ You are the maintainer of the open collections project. Your purpose is to keep 
 - **Source repo:** `kubernetes/kubernetes` (`release-x.x` branches)
 - **Spec path:** `api/openapi-spec/swagger.json`
 - **Spec type:** OpenAPI 2.0
-- **Latest version:** 1.35
+- **Latest version:** 1.36 (only cut a collection once the version is GA — check `releases/latest`)
 - **Update strategy:** One collection per version — create spec from swagger.json, then generate collection
 - **Details:** See `postman/collections/kubernetes.md`
 
