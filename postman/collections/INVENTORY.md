@@ -70,7 +70,7 @@ All six are **forks of upstream community collections**, not generated from a sp
 | Agentic Checkout API | `6045849-f1df2982-bd93-40c3-98ec-790edbbe33e8` | spec `22f6c43c-2d49-48c7-9f56-25f557d567fc` ← [`agentic-commerce-protocol`](https://github.com/agentic-commerce-protocol/agentic-commerce-protocol) `spec/2025-09-29/openapi/openapi.agentic_checkout.yaml` | **drift** — latest spec version is `2026-04-17` |
 | Agentic Checkout Webhooks API | `6045849-22f3306b-4a16-4ad2-a6d8-d3ddb7531bc3` | spec `8710d7b7-afe0-4835-9c09-3c5244cd245d` ← `…/openapi.agentic_checkout_webhook.yaml` | **drift** — same |
 | Agentic Commerce — Delegate Payment API | `6045849-680ba24b-44ea-46f7-8693-1504a73af9ae` | spec `2848b7ec-d1a8-4c9b-bac0-bccf5ccda2ee` ← `…/openapi.delegate_payment.yaml` | **drift** — same |
-| Firecrawl API | `6045849-d5490486-fd6e-46ed-9ac4-fd3b4fb33dc7` | spec `d17a6e5b-48b6-423b-99a1-9d8566870fc9` (root file `index.yaml`) ← [`mendableai/firecrawl`](https://github.com/mendableai/firecrawl) `main:apps/api/openapi.json` | **drift** — 14 requests vs 22 upstream ops; Postman reports `out-of-sync` |
+| Firecrawl API | `6045849-d5490486-fd6e-46ed-9ac4-fd3b4fb33dc7` | spec `d17a6e5b-48b6-423b-99a1-9d8566870fc9` (root file `index.yaml`) ← [`mendableai/firecrawl`](https://github.com/mendableai/firecrawl) `main:apps/api/openapi.json` | **spec updated 2026-08-07, collection sync blocked** — see [below](#firecrawl-spec-is-current-collection-sync-will-not-apply) |
 
 ### Productivity (2 workspaces)
 
@@ -111,9 +111,41 @@ Public Postman workspaces owned by the team that are deliberately **not** in the
 
 ## Known limitations
 
+### Firecrawl: spec is current, collection sync will not apply
+
+On 2026-08-07 the Firecrawl spec's root file (`index.yaml`, spec `d17a6e5b-…`) was replaced with
+the current upstream `apps/api/openapi.json` — 22 operations. Postman accepted the update
+(`updatedAt: 2026-08-07T00:23:40Z`).
+
+`syncCollectionWithSpec` was then called **twice**. Both calls returned `202` with a task ID
+(`d5d86576-…`, `2ccdf962-…`), but after ~6 minutes the collection was unchanged: still 7 root
+folders, `updatedAt` still `2025-10-01`, and `getSpecCollections` still reports `out-of-sync`.
+
+Most likely cause: this collection has **diverged** from its generated form. It carries manual
+edits — a hand-written description, collection-level `apikey` auth using
+`{{vault:FIRECRAWL_API_KEY}}`, a `baseUrl` variable, and pre-request/test script stubs. Postman
+appears to refuse a silent overwrite and wants the conflict resolved interactively.
+
+**To finish:** open Spec Hub → Firecrawl API → the linked collection, and accept the pending
+changes in the UI. The eight endpoints that should appear are `GET /crawl/active`,
+`POST|GET /deep-research`, `POST|GET /llmstxt`, `GET /team/token-usage`, `POST /feedback`, and
+`POST /search/{jobId}/feedback`.
+
+There is no MCP tool to poll a collection-sync task, so the failure is only observable by
+re-reading the collection. Note this before assuming a `202` means the sync landed.
+
+### No delete or folder-create tools
+
 The Postman MCP server exposes no tool to **delete** a collection or to **create a folder**
 inside an existing collection. Two consequences, both flagged in the per-project docs:
 
 - Orphaned collections must be deleted from the Postman UI.
 - New endpoints added to a collection that has no matching folder land at the collection root
   and need to be dragged into place manually.
+
+### Large spec files
+
+`updateSpecFile` takes the spec as a string parameter, so an agent must reproduce the whole file
+in the tool call. Firecrawl (56 KB minified) was feasible. Radarr (145 KB) and the six Agentic
+Commerce files (~210 KB total) are large enough that verbatim reproduction is a real risk —
+prefer running those from a script that reads the file directly.
