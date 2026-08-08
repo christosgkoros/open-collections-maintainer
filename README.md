@@ -1,4 +1,4 @@
-# open-collections-maintainer
+# OpenCollections maintainer
 
 Keeps up-to-date Postman collections for projects that don't publish their own.
 
