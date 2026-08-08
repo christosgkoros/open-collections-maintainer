@@ -7,6 +7,36 @@ projects' documentation and update workspaces and collections.
 This file is the harness-agnostic contract for any agent working in this repo. Anything
 specific to a single agent runtime belongs in that runtime's own file (e.g. `CLAUDE.md`).
 
+## Preflight: check the authenticated Postman user
+
+**Before any sync run, call `getAuthenticatedUser` and confirm it returns:**
+
+| Field | Expected |
+| --- | --- |
+| `id` | `6045849` |
+| `username` | `gkorosc` |
+| `teamId` | `3476680` |
+| `teamName` | `Open Collections` |
+
+If it returns anything else, stop and re-authenticate. Do not proceed.
+
+Every Open Collections resource is owned by user `6045849`. On 2026-08-08 the authenticated
+identity silently swapped mid-session to a different account (`cgkoros` / `23548826`, team
+`Postman` / `6029`) — most likely an OAuth token refresh landing on the wrong account.
+
+This failure is **silent and easy to misread**:
+
+- Reads keep working. Every Open Collections workspace is public, so `getCollection`,
+  `getWorkspace`, and friends all return `200` under the wrong identity. Nothing signals that
+  you are no longer the owner.
+- Writes are the real hazard. The wrong account is not a member of team `3476680`, so writes
+  will fail or behave unpredictably.
+- Re-check after any long-running session or after a re-authentication prompt, not just at the
+  start.
+
+Confirm ownership on write responses too — collection and spec mutations echo `owner` /
+`createdBy`, which should read `6045849`.
+
 ## Repo layout
 
 - `postman/collections/` — docs for the **maintained public collections** only.

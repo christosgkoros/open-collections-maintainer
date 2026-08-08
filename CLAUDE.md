@@ -8,9 +8,16 @@ This file covers only what is specific to running that work in Claude Code.
 
 ## Authenticate Postman before starting
 
-The Postman MCP server (`mcp.postman.com`) uses interactive OAuth. If Postman tools fail or the
-server shows as disconnected, run `/mcp` and re-authenticate. There is no `.mcp.json` in this
-repo — the credential lives in the local Claude install, not in version control.
+The Postman MCP server (`mcp.postman.com`) uses interactive OAuth. There is no `.mcp.json` in
+this repo — the credential lives in the local Claude install, not in version control.
+
+**Run the `getAuthenticatedUser` preflight from [`AGENTS.md`](AGENTS.md) before any sync**, and
+again after any re-auth prompt or long gap. The expected identity is `gkorosc` / `6045849` /
+team `Open Collections` (`3476680`).
+
+`/mcp` re-authenticates. Note that it does **not** let you pick an account — it reconnects to
+whichever Postman session the browser holds. If it lands on the wrong account, switch accounts
+in Postman itself, then `/mcp` again and re-verify.
 
 ## Postman tools are deferred
 
