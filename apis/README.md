@@ -78,8 +78,13 @@ v1.36 is missing from the portal's `WORKSPACES` array; v1.37 exists as a branch 
 | Threads API | `6045849-fa9543e1-caa3-4747-9514-cd1a00938903` | `6045849-892f65cb-352c-4217-8ba8-26ffae0723af` | <https://developers.facebook.com/docs/threads> |
 | Twitter API v2 | `6045849-841c43d0-5967-42a3-b693-1b91bd600ee4` | `9956214-784efcda-ed4c-4491-a4c0-a26470a67400` | <https://docs.x.com/x-api/introduction> |
 
-Status: **manual** for all six. Note OpenAI is the one with a real machine-readable source
-(`openai/openai-openapi`) — it could be converted to a spec-backed collection if wanted.
+Status: **manual** for all six — forks, nothing to diff mechanically.
+
+**Relevance reviewed 2026-08-08** — see [`social-media-flow.md`](social-media-flow.md). Every
+endpoint is alive; the problems are configuration and one obsolete API. Headlines: Bluesky's
+`baseUrl` is literally `/` and must be fixed; OpenAI is built on the legacy Completions endpoint
+and should be retired or repointed; LinkedIn's `LinkedIn-Version` header may have sunset and
+needs a token to verify; Twitter/X works but its upstream fork has been abandoned since 2023.
 
 ---
 
@@ -102,8 +107,10 @@ Status: **manual** for all six. Note OpenAI is the one with a real machine-reada
 - **Workspace:** `ce5e4601-f944-4759-b03f-74598c308157`
 - **Collection:** `6045849-e8686ec6-e032-42c0-b0ef-59834ace8aa4`
 - **Spec:** `7481b1ee-c2f5-459c-a23b-419653988a59` (OpenAPI 3.0, root file `index.yaml`) — `in-sync`
-- **Root source:** [`Radarr/Radarr`](https://github.com/Radarr/Radarr) `develop:src/Radarr.Api.V3/openapi.json`
-  (~302 KB raw / 145 KB minified)
+- **Root source:** <https://radarr.video/docs/api/> — a Swagger UI page whose spec URL resolves to
+  [`Radarr/Radarr`](https://github.com/Radarr/Radarr) `develop:src/Radarr.Api.V3/openapi.json`
+  (~302 KB raw / 145 KB minified). Track the docs page; the raw URL is what it currently loads and
+  could change. Note it serves **`develop`**, not a release branch.
 - **Status:** **drift** — 236 ops in spec vs 237 upstream. Missing `GET /api/v3/qualitydefinition/limits`.
 
 ### Sonarr
@@ -111,8 +118,12 @@ Status: **manual** for all six. Note OpenAI is the one with a real machine-reada
 - **Workspace:** `96bfa815-9da6-49c2-9d86-3ba980ac05ca`
 - **Collection:** `6045849-d4e91ced-502c-4fed-99d0-66688c31e52a`
 - **Spec:** none — collection was not generated from a Postman spec
-- **Root source:** [`Sonarr/Sonarr`](https://github.com/Sonarr/Sonarr) `develop:src/Sonarr.Api.V3/openapi.json`
-- **Status:** **in sync** — 234 ops, unchanged upstream since the collection was built (2024-12-19)
+- **Root source:** <https://sonarr.tv/docs/api/>, which publishes **two** specs:
+  - `develop:src/Sonarr.Api.V3/openapi.json` — Sonarr v3.0.0, 234 ops (what the collection covers)
+  - `v5-develop:src/Sonarr.Api.V5/openapi.json` — **Sonarr v5.0.0, 233 ops (not covered at all)**
+- **Status:** V3 **in sync** — 234 ops, unchanged upstream since the collection was built
+  (2024-12-19). **V5 is a gap**: an entire API version with no collection. Decide whether to add a
+  `Sonarr V5` collection alongside, mirroring the Kubernetes one-collection-per-version pattern.
 
 ---
 
@@ -229,9 +240,18 @@ curl -s 'https://keep.googleapis.com/$discovery/rest?version=v1' \
 ### Geekbot API
 
 - **Workspace:** `07a25e48-f227-414f-99bd-bfa2407bf444`
-- **Collection:** `6045849-f2751dfc-d5a4-400a-86e8-68b48d48d7eb`
-- **Root source:** <https://geekbot.com/developers/> (HTML docs, no published OpenAPI)
-- **Status:** **manual** — review by hand
+- **Collection:** `6045849-f2751dfc-d5a4-400a-86e8-68b48d48d7eb` — 14 requests, all v1
+- **Auth:** apikey header, `{{vault:GEEKBOT_API_KEY}}` · **`baseUrl`** = `https://api.geekbot.com/v1`
+- **Root source:** <https://developers.geekbot.com/> — a Scalar reference page that **does publish
+  OpenAPI**, at `https://developers.geekbot.com/openapi.json` (and `.yaml`).
+- **Status:** **drift, and previously misclassified.** This was recorded as "manual, no OpenAPI",
+  which was wrong. The spec has **37 operations across v1 and v2**; the collection covers 14, all
+  v1. Missing: the `/v1/me` family (`me`, `me/standups`, `me/teams`) and **the entire v2 surface**
+  (19 ops), including out-of-office (`/v2/ooo`), participation endpoints, and the v2 forms of
+  standups, polls and reports.
+- **Next:** make it spec-backed — `createSpec` from `openapi.json`, then `generateCollection`.
+  Because the existing collection predates any spec it can never be synced (see
+  [`firecrawl.md`](firecrawl.md)), so generating a fresh one is the cleaner route here.
 
 ---
 
