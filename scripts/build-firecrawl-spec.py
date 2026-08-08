@@ -37,7 +37,8 @@ import urllib.request
 UPSTREAM = (
     "https://raw.githubusercontent.com/mendableai/firecrawl/main/apps/api/openapi.json"
 )
-OUT = pathlib.Path(__file__).resolve().parent.parent / "postman/specs/firecrawl.openapi.json"
+# Derived artifact — gitignored. The script is the source of truth, not its output.
+OUT = pathlib.Path(__file__).resolve().parent.parent / "build/firecrawl.openapi.json"
 
 V1 = "https://api.firecrawl.dev/v1"
 V2 = "https://api.firecrawl.dev/v2"
@@ -167,9 +168,9 @@ def build(spec):
         for p in unknown:
             print(f"  unhandled empty object: {p}")
         sys.exit(
-            "ERROR: new empty objects found upstream. Postman rewrites `{}` to `[]` on store, "
-            "which makes the stored spec invalid. Add an equivalent non-empty form to "
-            "EMPTY_OBJECT_FIXES for each path above."
+            "ERROR: empty objects remain that this script cannot safely rewrite. Postman turns "
+            "`{}` into `[]` on store, which makes the stored spec invalid. Extend "
+            "fix_empty_objects() with an equivalent non-empty form for each path above."
         )
 
     for p in fix_enum_defaults(spec):
@@ -279,7 +280,7 @@ def main():
     OUT.write_text(json.dumps(spec, indent=2, ensure_ascii=False) + "\n")
 
     ops = sum(1 for p, i in spec["paths"].items() for m in i if m in METHODS)
-    print(f"wrote {OUT.relative_to(OUT.parent.parent.parent)}  ({ops} operations)")
+    print(f"wrote {OUT}  ({ops} operations)")
     print(f"v2 server override applied to: {', '.join(patched)}")
 
     if not args.no_lint:

@@ -82,4 +82,4 @@ Two things could not be done through the Postman MCP server:
    ```
 3. Pull the patch for each changed file with `-q '.files[] | select(...) | .patch'`
 4. Apply changes via `updateCollectionRequest` / `createCollectionRequest` / `createCollectionResponse`
-5. Update this file and [`INVENTORY.md`](INVENTORY.md)
+5. Update this file and [the registry](README.md)

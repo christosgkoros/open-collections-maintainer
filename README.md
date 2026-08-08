@@ -11,18 +11,26 @@ on a weekly cadence and the collections updated to match.
 
 ```
 open-collections-maintainer/
-├── AGENTS.md                  # Agent contract — scope, workflows, conventions (start here)
-├── CLAUDE.md                  # Claude Code specifics only
-├── postman/collections/
-│   ├── INVENTORY.md           # Full registry: every collection, source, ID, status
-│   ├── dapr.md                # Dapr — docs-diff workflow
-│   └── kubernetes.md          # Kubernetes — one collection per GA version
-└── astro/                     # Astropods agent scaffold (separate concern — see astro/README.md)
+├── AGENTS.md              # Agent contract — scope, workflows, conventions (start here)
+├── CLAUDE.md              # Claude Code specifics only
+├── apis/                  # One context file per API. Notes, not collection exports.
+│   ├── README.md          # Registry: every collection, source, ID, status
+│   ├── dapr.md            # docs-diff workflow
+│   ├── kubernetes.md      # one collection per GA version
+│   └── firecrawl.md       # v1/v2 split, spec defects, Postman quirks
+├── scripts/               # validate-spec.sh (Spectral gate), build-<api>-spec.py
+├── build/                 # gitignored — generated specs land here, never committed
+└── astro/                 # Astropods agent scaffold (separate concern)
 ```
+
+`apis/` holds **maintainer notes**, not artifacts. No Postman collection JSON and no OpenAPI
+spec is stored in this repo. Where a spec needs correcting before it can be published, the
+*script* that corrects it is committed and the output is regenerated on demand — so it keeps
+working as upstream moves, instead of rotting in version control.
 
 ## Where to start
 
-[`postman/collections/INVENTORY.md`](postman/collections/INVENTORY.md) is the source of truth:
+[`apis/README.md`](apis/README.md) is the source of truth:
 for each collection it records the workspace and collection IDs, the linked Postman spec, the
 exact upstream path or URL, auth setup, and current sync status.
 

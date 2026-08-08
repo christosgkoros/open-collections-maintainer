@@ -39,9 +39,15 @@ Confirm ownership on write responses too — collection and spec mutations echo 
 
 ## Repo layout
 
-- `postman/collections/` — docs for the **maintained public collections** only.
-  `INVENTORY.md` is the registry; `dapr.md` and `kubernetes.md` cover the two multi-version
-  projects. Nothing else belongs in here.
+- `apis/` — one markdown context file per API we maintain, plus `README.md`, the registry
+  covering all 16 workspaces / 30 collections. An API gets its own file once it needs more than
+  a registry row: root source, IDs, quirks, procedure, outstanding work. Currently `dapr.md`,
+  `kubernetes.md`, `firecrawl.md`.
+  **These are notes, not collection exports** — no Postman collection or spec JSON lives here.
+- `scripts/` — the tooling those notes refer to. `validate-spec.sh` lints any spec with Spectral;
+  `build-<api>-spec.py` reconstructs a corrected spec from upstream.
+- `build/` — gitignored. Generated specs land here. **Never commit a spec artifact**; the script
+  that produces it is the source of truth, so it stays correct as upstream moves.
 - `astro/` — a self-contained Astropods agent scaffold, unrelated to collection maintenance.
   Out of scope for sync work.
 
@@ -58,7 +64,7 @@ companions and are deliberately not published.
 ## Maintained projects
 
 Full inventory — every collection with its root source, sync status, and known issues — is in
-[`postman/collections/INVENTORY.md`](postman/collections/INVENTORY.md). **Start there.**
+[`apis/README.md`](apis/README.md). **Start there.**
 
 Two projects have multi-version workflows and are documented separately:
 
@@ -69,7 +75,7 @@ Two projects have multi-version workflows and are documented separately:
 - **Docs path:** `daprdocs/content/en/reference/api/`
 - **Current version:** 1.18
 - **Update strategy:** compare endpoints and update the existing collection in place
-- **Details:** [`postman/collections/dapr.md`](postman/collections/dapr.md)
+- **Details:** [`apis/dapr.md`](apis/dapr.md)
 
 ### Kubernetes API
 
@@ -79,7 +85,7 @@ Two projects have multi-version workflows and are documented separately:
 - **Spec type:** OpenAPI 2.0
 - **Latest version:** 1.36 — only cut a collection once the version is GA (check `releases/latest`)
 - **Update strategy:** one collection per version — create a spec from swagger.json, then generate
-- **Details:** [`postman/collections/kubernetes.md`](postman/collections/kubernetes.md)
+- **Details:** [`apis/kubernetes.md`](apis/kubernetes.md)
 
 ## Tools
 
@@ -100,7 +106,7 @@ Two projects have multi-version workflows and are documented separately:
    has no HTTP surface.
 4. Apply changes: update existing requests, create new ones, add saved responses for new status
    codes.
-5. Record the change in `postman/collections/dapr.md` and `INVENTORY.md`.
+5. Record the change in `apis/dapr.md` and the registry (`apis/README.md`).
 6. Commit and push.
 
 ### Kubernetes — one collection per version
@@ -111,7 +117,7 @@ Two projects have multi-version workflows and are documented separately:
 3. Create a spec (`createSpec`, type `OPENAPI:2.0`).
 4. Generate a collection (`generateCollection`, folder strategy `Tags`, request names `Fallback`,
    parameters `Example`).
-5. Update `postman/collections/kubernetes.md` and `INVENTORY.md`.
+5. Update `apis/kubernetes.md` and the registry (`apis/README.md`).
 6. Commit and push.
 
 ### Spec-backed collections — Radarr, Firecrawl, ACP, Agentic Commerce, Spotify
@@ -135,7 +141,7 @@ gh api "repos/<owner>/<repo>/contents/<path>?ref=<branch>" -H "Accept: applicati
 ## Postman MCP surface — known limitations
 
 These are properties of the Postman MCP server, not of any particular agent runtime. All of them
-were hit in practice; see `INVENTORY.md` for the specific incidents.
+were hit in practice; see the registry (`apis/README.md`) for the specific incidents.
 
 - **A spec file's content must match its extension.** `updateSpecFile` stores raw text and does
   **not** validate the two against each other, but Postman's downstream tooling keys off the
@@ -161,8 +167,8 @@ were hit in practice; see `INVENTORY.md` for the specific incidents.
 
 ## Conventions
 
-- Every collection change is recorded in `INVENTORY.md` and, where one exists, the per-project
-  doc under `postman/collections/`.
+- Every collection change is recorded in the registry (`apis/README.md`) and, where one exists, the per-project
+  doc under `apis/`.
 - Commit and push after a sync. Include what changed upstream and what was applied, and state
   explicitly anything that was left undone.
 - Report honestly: if a sync did not land, say so. A silently failed write to a public collection

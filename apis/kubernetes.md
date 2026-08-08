@@ -85,7 +85,7 @@ so a collection cut now would be stale within days. Create it once `v1.37.0` is 
      - `requestNameSource`: `Fallback`
      - `parametersResolution`: `Example`
 
-5. **Update** this file, [`INVENTORY.md`](INVENTORY.md), and the portal's `WORKSPACES` array.
+5. **Update** this file, [the registry](README.md), and the portal's `WORKSPACES` array.
 
 ## Re-checking an existing version
 

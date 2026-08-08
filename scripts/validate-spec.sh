@@ -9,7 +9,7 @@
 # pass --strict to fail on warnings too.
 #
 # Usage:
-#   scripts/validate-spec.sh postman/specs/firecrawl.openapi.json
+#   scripts/validate-spec.sh build/firecrawl.openapi.json
 #   scripts/validate-spec.sh --strict path/to/spec.yaml
 
 set -uo pipefail
