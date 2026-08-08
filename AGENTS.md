@@ -122,9 +122,25 @@ Two projects have multi-version workflows and are documented separately:
 
 ### Spec-backed collections — Radarr, Firecrawl, ACP, Agentic Commerce, Spotify
 
-1. `getSpecCollections` reports `in-sync` / `out-of-sync` per collection — check it first.
-2. Update the spec's root file with fresh upstream content (`updateSpecFile`).
-3. `syncCollectionWithSpec`, then **verify** (see below).
+**First check whether the collection can sync at all.** `syncCollectionWithSpec` only works on a
+collection that was *generated from* the spec. Compare `createdAt` on both: if the collection
+predates the spec, the two were merely associated, and every sync call will return `202` and
+silently do nothing — proven over five attempts on Firecrawl with a valid, byte-perfect spec in
+place. Of the spec-backed collections, only Kubernetes v1.36 has the spec created first.
+
+For a syncable collection:
+
+1. `getSpecCollections` reports `in-sync` / `out-of-sync` — check it first. On a non-generated
+   collection this reflects "no diff since linking", not "syncable".
+2. Build and **lint** the spec — `scripts/validate-spec.sh` must pass with 0 errors. Postman
+   accepts invalid specs without complaint.
+3. `updateSpecFile`, then read the spec back and lint *that* — Postman rewrites `{}` to `[]` on
+   store and can turn a clean document into an invalid one.
+4. `syncCollectionWithSpec`, then **verify by re-reading the collection**.
+
+For a non-generated collection, either hand-maintain it with `createCollectionRequest`, or
+regenerate with `generateCollection` — which fixes syncing permanently but changes the collection
+UID, so the portal's `WORKSPACES` array and any shared links need updating.
 
 ### Detecting drift cheaply
 

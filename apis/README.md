@@ -196,9 +196,10 @@ renaming via `updateSpecProperties`.
   `main:apps/api/openapi.json`. **Never push it as published** — it declares a single `/v1`
   server while shipping two operations that only exist on v2, and it carries an enum/default
   error. Build the corrected spec with `scripts/build-firecrawl-spec.py --verify`.
-- **Status (2026-08-08):** collection carries all 22 operations. Spec pushed, but the live copy
-  still shows 2 errors that Postman itself injects by rewriting `{}` to `[]`; the immune build
-  is ready to push. `syncCollectionWithSpec` has no-opped four times.
+- **Status (2026-08-08):** collection carries all 22 operations; spec in Postman is valid and
+  byte-identical to the generated artifact (Spectral: 0 errors). **`syncCollectionWithSpec` does
+  not work here** — five no-ops. The collection predates its spec, so it was never generated from
+  it. Maintain it by hand, or regenerate and accept a new UID.
 - **Details:** [`firecrawl.md`](firecrawl.md) — the version split, the three spec defects, the
   Postman corruption, and what is still outstanding.
 

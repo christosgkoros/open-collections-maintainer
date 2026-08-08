@@ -77,34 +77,61 @@ The build script emits both in equivalent non-empty form (an empty schema become
 defaults). It **hard-fails** if upstream introduces an empty object it cannot map — do not
 bypass that.
 
-## Collection sync does not work
+## Collection sync does not work — and the spec is not why
 
-`syncCollectionWithSpec` has been called **four times** across 2026-08-07/08. Every call returned
-`202` with a task ID; the collection never changed and `getSpecCollections` still reports
+`syncCollectionWithSpec` has been called **five times** across 2026-08-07/08. Every call returned
+`202` with a task ID. The collection never changed, and `getSpecCollections` still reports
 `out-of-sync`. No error surfaces anywhere, and there is no MCP tool to poll a collection-sync task.
 
 The 22 requests were therefore added by hand with `createCollectionRequest`, which works reliably.
 
-Two candidate explanations, neither confirmed:
+**Ruled out, in order:**
 
-- **The stored spec was invalid** because of the `{}` → `[]` corruption above. This is the better
-  theory and is now testable: push a corruption-immune spec and retry the sync.
-- **The collection was never generated from the spec.** It was created 2025-02-03; the spec
-  2025-04-23 — nearly three months later — so it was associated, not generated. The tool's
-  contract says *"You can only sync collections generated from the given spec ID."* Kubernetes
-  v1.36, the one spec-backed collection that demonstrably syncs, had its spec created 14 minutes
-  **before** its collection.
+| Hypothesis | How it was tested | Verdict |
+| --- | --- | --- |
+| Spec file format — JSON stored in `index.yaml` | Renamed to `index.json` | Real bug, fixed. Sync still no-ops. |
+| Collection divergence needing UI conflict resolution | Assumed from manual edits | Guess, never evidenced. Dropped. |
+| Stored spec was invalid via Postman's `{}` → `[]` corruption | Pushed a corruption-immune build; live copy now lints **0 errors** and is byte-for-byte identical to the artifact | Real bug, fixed. **Sync still no-ops.** |
 
-Radarr, ACP and Spotify share the collection-predates-spec pattern, so expect the same behaviour
-there. Resolve Firecrawl before spending effort on them.
+So an invalid stored spec was *not* the cause. Each fix was worth making on its own merits, but
+none of them moved the sync.
+
+**What survives:** the collection was never *generated* from this spec. It was created
+2025-02-03; the spec 2025-04-23, nearly three months later — so the two were associated, not
+generated. `syncCollectionWithSpec`'s own contract says *"You can only sync collections generated
+from the given spec ID."* The API appears to accept the request, find no generated-collection
+relationship to act on, and complete as a no-op with nothing to report.
+
+The control case supports this: **Kubernetes v1.36**, the one spec-backed collection that
+demonstrably syncs, had its spec created at 13:31 and its collection at 13:45 — spec **first**.
+
+| Collection | Created | Spec created | Order | Syncs? |
+| --- | --- | --- | --- | --- |
+| Kubernetes v1.36 | 2026-05-14 13:45 | 2026-05-14 13:31 | spec first | **yes** |
+| Firecrawl | 2025-02-03 | 2025-04-23 | collection first | **no** |
+| Radarr | 2024-12-19 | 2025-04-23 | collection first | untested |
+| Agent Connect Protocol | 2025-03-07 | 2025-04-23 | collection first | untested |
+| Spotify | 2024-12-17 | 2025-04-23 | collection first | untested |
+
+Radarr, ACP and Spotify all share the collection-predates-spec pattern. Their `in-sync` status
+most likely means "no diff since linking", not "syncable" — **do not assume updating their specs
+will propagate.** Verify by reading the collection back, as always.
+
+**Two ways forward, both with costs:**
+
+- **Hand-maintain** with `createCollectionRequest` / `updateCollectionRequest`. Reliable, keeps
+  the collection UID and every published link. This is what was done here.
+- **Regenerate** with `generateCollection` from the spec. Produces a genuinely generated
+  collection that syncs correctly from then on — but a **new UID**, so the portal's `WORKSPACES`
+  array and any shared links must be updated, and the old collection deleted in the UI.
 
 ## Outstanding
 
-- **Push the corruption-immune spec.** The live copy still carries Postman's 2 injected errors.
-  Then retry the sync — that is the experiment that settles the root cause.
 - **Five requests sit at the collection root** — `deep-research` ×2, `llmstxt` ×2, `POST /feedback`
   — because no matching folder exists and the MCP server cannot create one. Add `research`,
   `llmstxt` and `feedback` folders in the UI and move them.
+- **Decide hand-maintain vs regenerate.** Until then this collection is correct but will never
+  sync, so every upstream change has to be applied by hand.
 
 ## Re-checking drift
 
