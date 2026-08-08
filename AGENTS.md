@@ -7,6 +7,14 @@ projects' documentation and update workspaces and collections.
 This file is the harness-agnostic contract for any agent working in this repo. Anything
 specific to a single agent runtime belongs in that runtime's own file (e.g. `CLAUDE.md`).
 
+## Repo layout
+
+- `postman/collections/` — docs for the **maintained public collections** only.
+  `INVENTORY.md` is the registry; `dapr.md` and `kubernetes.md` cover the two multi-version
+  projects. Nothing else belongs in here.
+- `astro/` — a self-contained Astropods agent scaffold, unrelated to collection maintenance.
+  Out of scope for sync work.
+
 ## Scope
 
 The published surface is the **Open Collections** Postman team (`opencollections`,
