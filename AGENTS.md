@@ -107,11 +107,17 @@ gh api "repos/<owner>/<repo>/contents/<path>?ref=<branch>" -H "Accept: applicati
 These are properties of the Postman MCP server, not of any particular agent runtime. All of them
 were hit in practice; see `INVENTORY.md` for the specific incidents.
 
+- **A spec file's content must match its extension.** `updateSpecFile` stores raw text and does
+  **not** validate the two against each other, but Postman's downstream tooling keys off the
+  extension. Writing JSON into an `index.yaml` root file returns success and then silently breaks
+  every sync from that spec. Check the current extension with `getSpecFiles` first, and either
+  convert the content or rename the file. Renaming uses the `name` parameter, and the endpoint
+  rejects multiple body properties per call — so rename and set content in two separate calls.
 - **A `202` from `syncCollectionWithSpec` does not mean the sync happened.** There is no tool to
-  poll a collection-sync task. Always re-read the collection afterwards and confirm the expected
-  endpoints exist. A collection that has diverged from its generated form (manual description,
-  auth, variables, scripts) appears to need interactive conflict resolution in the UI — the API
-  call is accepted and then silently does nothing.
+  poll a collection-sync task, and a broken spec produces no error anywhere in the chain. Always
+  re-read the collection afterwards and confirm the expected endpoints exist. When a sync no-ops,
+  suspect the spec file before blaming collection divergence — divergence is a plausible-sounding
+  story that has already been wrong once.
 - **No delete tool.** Orphaned or duplicate collections must be removed from the Postman UI.
 - **No folder-create tool.** `createCollectionRequest` takes a `folderId` but folders can only be
   created via `putCollection`, which replaces the whole collection. New requests that don't have

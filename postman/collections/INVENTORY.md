@@ -187,15 +187,19 @@ renaming via `updateSpecProperties`.
 
 - **Workspace:** `6208dfd5-00ce-43de-a652-e8e205b1f194`
 - **Collection:** `6045849-d5490486-fd6e-46ed-9ac4-fd3b4fb33dc7` (14 requests, 7 root folders)
-- **Spec:** `d17a6e5b-48b6-423b-99a1-9d8566870fc9` (OpenAPI 3.0, root file `index.yaml`)
+- **Spec:** `d17a6e5b-48b6-423b-99a1-9d8566870fc9` (OpenAPI 3.0, root file **`index.json`** —
+  renamed from `index.yaml` on 2026-08-08; upstream ships JSON, keep the extension matching)
 - **Environment:** `6045849-26245515-55b7-447c-89db-30ec1382d68e`
 - **Auth:** collection-level apikey, `Authorization: Bearer {{vault:FIRECRAWL_API_KEY}}`
 - **Base URL variable:** `baseUrl` = `https://api.firecrawl.dev/v1`
 - **Root source:** [`mendableai/firecrawl`](https://github.com/mendableai/firecrawl)
   `main:apps/api/openapi.json` — 22 ops (~111 KB raw / 56 KB minified).
   The repo also has `v1-openapi.json` (20 ops) and `openapi-v0.json` (legacy). **Use `openapi.json`.**
-- **Status:** **blocked** — spec updated to current upstream on 2026-08-07; collection sync will
-  not apply. See [Firecrawl sync](#firecrawl-spec-is-current-collection-sync-will-not-apply).
+- **Status:** spec updated to current upstream (22 ops). The 2026-08-07 sync failure was caused by
+  writing JSON into the then-`.yaml` root file — see
+  [spec file format](#spec-file-format-must-match-its-extension--updatespecfile-will-not-tell-you).
+  Fixed 2026-08-08 by renaming the file to `index.json`. Re-verify the collection picked up the
+  eight new endpoints before marking this in sync.
 
 ---
 
@@ -283,23 +287,44 @@ and therefore out of scope:
 
 ## Known limitations
 
-### Firecrawl: spec is current, collection sync will not apply
+### Spec file format must match its extension — `updateSpecFile` will not tell you
 
-On 2026-08-07 the Firecrawl spec's root file (`index.yaml`, spec `d17a6e5b-…`) was replaced with
-the current upstream `apps/api/openapi.json` — 22 operations. Postman accepted the update
-(`updatedAt: 2026-08-07T00:23:40Z`).
+**This is the single most important gotcha in this repo.** It cost a full debugging cycle and
+produced a confidently wrong diagnosis.
 
-`syncCollectionWithSpec` was then called **twice**. Both returned `202` with a task ID
-(`d5d86576-…`, `2ccdf962-…`), but ~10 minutes later the collection was unchanged: still 7 root
-folders, `updatedAt` still `2025-10-01`, and `getSpecCollections` still reporting `out-of-sync`.
+On 2026-08-07 the Firecrawl spec's root file was `index.yaml`. It was updated with the contents
+of upstream `apps/api/openapi.json` — i.e. **JSON content written into a `.yaml` file**, on the
+reasoning that JSON is a subset of YAML and would parse.
 
-Most likely cause: the collection has **diverged** from its generated form. It carries manual
-edits — hand-written description, collection-level apikey auth using `{{vault:FIRECRAWL_API_KEY}}`,
-a `baseUrl` variable, and pre-request/test script stubs. Postman appears to refuse a silent
-overwrite and want the conflict resolved interactively.
+`updateSpecFile` accepted it and returned success. It does **not** validate that the content
+format matches the file extension; it stores raw text. But Postman's downstream tooling keys off
+the extension, so the spec was thereafter unreadable to the sync pipeline.
 
-**To finish:** Spec Hub → Firecrawl API → linked collection → accept the pending changes. The
-eight endpoints that should appear are `GET /crawl/active`, `POST /deep-research`,
+The failure was silent and misleading:
+
+- `updateSpecFile` → `200`, with a fresh `updatedAt`.
+- `syncCollectionWithSpec` → `202` with a task ID, **twice**. Both no-ops.
+- The collection never changed; `getSpecCollections` kept reporting `out-of-sync`.
+- No error surfaced at any point, and there is no tool to poll a collection-sync task.
+
+**Resolved 2026-08-08** by renaming the root file to `index.json` in the Postman UI, after which
+the collection could be updated. The root file is now `index.json` — keep it that way, since
+upstream ships JSON.
+
+**Rules to follow:**
+
+1. Before calling `updateSpecFile`, check the current root file's extension with `getSpecFiles`.
+2. Either convert the upstream content to match that extension, or rename the file first.
+   `updateSpecFile` takes a `name` parameter, but it rejects multiple body properties in one
+   call — so renaming and setting content are two separate calls.
+3. Never assume "JSON is valid YAML" makes a `.yaml` file safe to fill with JSON. It does not.
+
+**Do not attribute a failed sync to collection divergence without evidence.** That was the
+original (wrong) conclusion here. The collection does carry manual edits — hand-written
+description, apikey auth via `{{vault:FIRECRAWL_API_KEY}}`, a `baseUrl` variable, script stubs —
+which made divergence a plausible-sounding story. It was not the cause.
+
+The eight endpoints this sync adds are `GET /crawl/active`, `POST /deep-research`,
 `GET /deep-research/{id}`, `POST /llmstxt`, `GET /llmstxt/{id}`, `GET /team/token-usage`,
 `POST /feedback`, `POST /search/{jobId}/feedback`.
 
