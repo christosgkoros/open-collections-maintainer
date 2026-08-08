@@ -9,13 +9,22 @@ collections. See the repo root [`README.md`](../README.md) and
 
 ## Quick start
 
-Run from **inside this directory**, not the repo root:
+Run from **inside this directory**, not the repo root — the CLI resolves `astropods.yml` from
+the current working directory. Verified with `ast spec validate` after the move.
 
 ```bash
 cd astro
 bun install
-ast dev
+
+ast project configure   # set credentials and inputs (writes .env here)
+ast project start       # start containers
+ast project logs        # tail container logs
+ast project stop        # stop containers
 ```
+
+> The old root README said `ast dev`. That command does not exist in the CLI (checked against
+> `ast/0.15.4`); local development is under `ast project`. Validate the manifest any time with
+> `ast spec validate`.
 
 ## Contents
 
