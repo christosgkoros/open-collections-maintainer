@@ -1399,11 +1399,11 @@
                         "markdown",
                         "json",
                         "branding"
-                      ],
-                      "default": [
-                        "markdown"
                       ]
-                    }
+                    },
+                    "default": [
+                      "markdown"
+                    ]
                   },
                   "jsonOptions": {
                     "type": "object",
@@ -1855,7 +1855,9 @@
                         "default": []
                       }
                     },
-                    "default": {}
+                    "default": {
+                      "formats": []
+                    }
                   }
                 },
                 "required": [
@@ -2816,7 +2818,9 @@
                         "type": {
                           "type": "string"
                         },
-                        "value": {}
+                        "value": {
+                          "description": "Any JSON value."
+                        }
                       }
                     }
                   }
@@ -3529,6 +3533,35 @@
   "security": [
     {
       "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Billing"
+    },
+    {
+      "name": "Crawling"
+    },
+    {
+      "name": "Extraction"
+    },
+    {
+      "name": "Feedback"
+    },
+    {
+      "name": "LLMs.txt"
+    },
+    {
+      "name": "Mapping"
+    },
+    {
+      "name": "Research"
+    },
+    {
+      "name": "Scraping"
+    },
+    {
+      "name": "Search"
     }
   ]
 }
