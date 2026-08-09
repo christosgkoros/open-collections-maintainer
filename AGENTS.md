@@ -111,6 +111,24 @@ Two projects have multi-version workflows and are documented separately:
 
 ### Kubernetes — one collection per version
 
+**Retention:** only upstream-supported versions are kept. Kubernetes maintains the latest three
+minor releases for ~14 months. On every sync pass, check EOL and retire what has expired — this is
+part of the job, not just adding new versions:
+
+```bash
+curl -s https://endoflife.date/api/kubernetes.json | python3 -c "
+import json,sys,datetime
+today=datetime.date.today().isoformat()
+for r in json.load(sys.stdin)[:8]:
+    print(r['cycle'], r['eol'], 'SUPPORTED' if str(r['eol'])>today else 'EOL')"
+```
+
+Retiring a version means deleting the collection **in the Postman UI** (no MCP delete tool),
+removing its row from `apis/kubernetes.md` and the registry, and trimming the portal's
+`WORKSPACES` array.
+
+Adding a version:
+
 1. List `release-x.x` branches, and check `releases/latest` to confirm the version is GA.
    A release branch is cut before GA and its swagger.json churns daily until release.
 2. Fetch `api/openapi-spec/swagger.json` from the branch (~4MB, under the 10MB Postman limit).

@@ -44,20 +44,23 @@ sits at the collection root and needs a `Shutdown API` folder.
 - **Environment:** `Local`, with a `token` variable for auth
 - **Details:** [`kubernetes.md`](kubernetes.md)
 
-| Version | Collection UID | Spec ID | Status |
-| --- | --- | --- | --- |
-| v1.29 | `6045849-58a070f1-2c72-4f9e-9a51-6fc644b1c95d` | — | frozen |
-| v1.30 | `6045849-1f1d88ed-29bd-4eee-8880-feb9c9f84a50` | — | frozen |
-| v1.31 | `6045849-389bb600-d473-449d-85e1-a11f4b87de79` | — | frozen |
-| v1.32 | `6045849-73802104-74e4-4566-b1ac-c59dc0f4f355` | — | frozen |
-| v1.33 | `6045849-f247f85f-45b1-4252-a91d-ee6a0922a655` | — | frozen |
-| v1.34 | `6045849-a51a17aa-2431-4584-a282-de1d3dab513e` | — | frozen |
-| v1.35 | `6045849-72134652-d0a4-4706-b310-96a36a72a9eb` | — | frozen |
-| v1.36 | `6045849-c4b570c3-3fc5-42c3-8959-37f270bcb4e7` | `246f8a3e-b11d-46e4-825e-927af6441480` | **in sync** (1123 ops, 771 defs) |
+**Retention policy:** only upstream-supported versions are kept. Kubernetes maintains the latest
+three minor releases for ~14 months; once a version reaches EOL its collection is retired.
+
+| Version | Collection UID | Spec ID | Upstream EOL | Status |
+| --- | --- | --- | --- | --- |
+| v1.34 | `6045849-a51a17aa-2431-4584-a282-de1d3dab513e` | — | 2026-10-27 | supported |
+| v1.35 | `6045849-72134652-d0a4-4706-b310-96a36a72a9eb` | — | 2027-02-28 | supported |
+| v1.36 | `6045849-c4b570c3-3fc5-42c3-8959-37f270bcb4e7` | `246f8a3e-b11d-46e4-825e-927af6441480` | 2027-06-28 | supported, **in sync** (1123 ops, 771 defs) |
+
+**Retired 2026-08-09** — v1.29 (EOL 2025-02-28), v1.30 (2025-07-15), v1.31 (2025-11-11),
+v1.32 (2026-02-28). **v1.33 also reached EOL on 2026-06-28** and is pending a decision.
+All five still exist in Postman and must be deleted from the UI — there is no MCP delete tool.
+IDs are in [`kubernetes.md`](kubernetes.md).
 
 Open items: duplicate orphan `6045849-e38ebf9d-9b6e-436b-be18-194ef2a2444f` needs deleting;
-v1.36 is missing from the portal's `WORKSPACES` array; v1.37 exists as a branch but is **not GA**
-(newest tag `v1.36.3`) so no collection yet.
+the portal's `WORKSPACES` array still advertises v1.29–v1.35 and must be cut down to v1.34–v1.36;
+v1.37 exists as a branch but is **not GA** (newest tag `v1.36.3`) so no collection yet.
 
 ---
 
@@ -95,12 +98,25 @@ needs a token to verify; Twitter/X works but its upstream fork has been abandone
 - **Workspace:** `abb28c01-be84-4ff1-a79f-4968a23e77b6`
 - **Collection:** `6045849-7d49cd37-a739-4295-a98f-494a53fb0078`
 - **Spec:** `2f284b74-d974-4e23-8b7a-9d5878fb47a6` (OpenAPI 3.0, created 2025-04-23) — `in-sync`
-- **Root source:** Spotify publishes no official OpenAPI. Docs:
-  <https://developer.spotify.com/documentation/web-api>. Community spec:
-  [`sonallux/spotify-web-api`](https://github.com/sonallux/spotify-web-api)
-  → `official-spotify-open-api.yml` (upstream last pushed 2026-07-24)
-- **Status:** needs review — spec-linked collection reports `in-sync`, but the community source
-  has moved since the spec was created. Not yet diffed.
+- **Root source:** <https://developer.spotify.com/documentation/web-api>. Spotify **does** publish
+  an official OpenAPI schema — corrected 2026-08-09, it was previously recorded as having none:
+  `https://developer.spotify.com/reference/web-api/open-api-schema.yaml`
+  (OpenAPI 3.0.3, 289,601 bytes, 96 operations across 70 paths).
+  [`sonallux/spotify-web-api`](https://github.com/sonallux/spotify-web-api) is a **byte-identical
+  mirror** of that file — verified with a zero-line diff — so track the official URL, not the fork.
+- **Status:** needs review, and **the official spec does not validate**. Spectral reports
+  **13 errors**, from two root causes:
+  - **11 × `invalid-ref`** — `components.x-spotify-policy.policies.$ref` points at `'../policies.yaml'`,
+    a relative file Spotify never published. Every `#/components/x-spotify-policy/policies/*`
+    reference then fails to resolve. `x-spotify-policy` is a vendor extension (103 occurrences),
+    so it is documentation metadata with no functional role — stripping it clears all 11.
+  - **2 × schema** — `PUT /playlists/{playlist_id}/images` sets `required: true` on a `type: string`
+    schema. In OpenAPI 3 a schema's `required` must be an array of property names; the boolean form
+    belongs on `requestBody.required`. A genuine Spotify bug.
+
+  Do not push this spec as published — see the Firecrawl precedent, where Postman accepted an
+  invalid spec and then silently failed. Build a corrected copy and gate it on
+  `scripts/validate-spec.sh`.
 
 ### Radarr
 

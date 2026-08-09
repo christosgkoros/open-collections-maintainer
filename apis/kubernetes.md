@@ -6,24 +6,58 @@
 - **Spec path:** `api/openapi-spec/swagger.json`
 - **Branch pattern:** `release-x.x` (e.g. `release-1.36`)
 - **Spec type:** OpenAPI 2.0 (Swagger)
-- **Last updated:** 2026-08-07
+- **Last updated:** 2026-08-09
+- **Retention policy:** keep only versions that are still upstream-supported. Kubernetes maintains
+  the latest three minor releases (N, N-1, N-2) for roughly 14 months. Once a version reaches EOL
+  the collection is removed from both the workspace and this file.
 
 ## Existing Collections
 
-| Version | Collection ID | Branch | Postman spec | Status |
-| ------- | ------------- | ------ | ------------ | ------ |
-| v1.29 | `58a070f1-2c72-4f9e-9a51-6fc644b1c95d` | `release-1.29` | — | frozen |
-| v1.30 | `1f1d88ed-29bd-4eee-8880-feb9c9f84a50` | `release-1.30` | — | frozen |
-| v1.31 | `389bb600-d473-449d-85e1-a11f4b87de79` | `release-1.31` | — | frozen |
-| v1.32 | `73802104-74e4-4566-b1ac-c59dc0f4f355` | `release-1.32` | — | frozen |
-| v1.33 | `f247f85f-45b1-4252-a91d-ee6a0922a655` | `release-1.33` | — | frozen |
-| v1.34 | `a51a17aa-2431-4584-a282-de1d3dab513e` | `release-1.34` | — | frozen |
-| v1.35 | `72134652-d0a4-4706-b310-96a36a72a9eb` | `release-1.35` | — | frozen |
-| v1.36 | `c4b570c3-3fc5-42c3-8959-37f270bcb4e7` | `release-1.36` | `246f8a3e-b11d-46e4-825e-927af6441480` | **in sync** |
+| Version | Collection ID | Branch | Postman spec | Upstream EOL | Status |
+| ------- | ------------- | ------ | ------------ | --- | ------ |
+| v1.34 | `a51a17aa-2431-4584-a282-de1d3dab513e` | `release-1.34` | — | 2026-10-27 | supported |
+| v1.35 | `72134652-d0a4-4706-b310-96a36a72a9eb` | `release-1.35` | — | 2027-02-28 | supported |
+| v1.36 | `c4b570c3-3fc5-42c3-8959-37f270bcb4e7` | `release-1.36` | `246f8a3e-b11d-46e4-825e-927af6441480` | 2027-06-28 | supported, **in sync** |
 
 Verified 2026-08-07: `release-1.36`'s `swagger.json` is byte-identical to the copy the Postman
 spec was created from on 2026-05-14 — 1123 operations, 771 definitions, no change across the
 `v1.36.0`–`v1.36.3` patch releases. `getSpecCollections` reports `in-sync`.
+
+## Retirement — EOL versions
+
+Checked 2026-08-09 against <https://endoflife.date/api/kubernetes.json>.
+
+| Version | Collection ID | Upstream EOL | Action |
+| --- | --- | --- | --- |
+| v1.29 | `58a070f1-2c72-4f9e-9a51-6fc644b1c95d` | 2025-02-28 | **delete** |
+| v1.30 | `1f1d88ed-29bd-4eee-8880-feb9c9f84a50` | 2025-07-15 | **delete** |
+| v1.31 | `389bb600-d473-449d-85e1-a11f4b87de79` | 2025-11-11 | **delete** |
+| v1.32 | `73802104-74e4-4566-b1ac-c59dc0f4f355` | 2026-02-28 | **delete** |
+| v1.33 | `f247f85f-45b1-4252-a91d-ee6a0922a655` | **2026-06-28** | **EOL — decision pending** |
+
+v1.29–v1.32 are retired by explicit instruction (2026-08-09) and have been removed from this file.
+
+**v1.33 went EOL on 2026-06-28**, six weeks before this check. The instruction was "remove
+everything before 1.33", which keeps it, but the standing policy above ("remove versions that have
+reached EOL") would also retire it. It is listed here rather than in the supported table so the
+discrepancy is visible. Resolve it explicitly — do not let it drift.
+
+**These still exist in Postman.** The MCP server has no collection-delete tool, so all five must be
+deleted from the Postman UI. Nothing in this repo removes them.
+
+After deleting, update the portal's `WORKSPACES` array — it still advertises v1.29–v1.35.
+
+### Checking EOL
+
+```bash
+curl -s https://endoflife.date/api/kubernetes.json | python3 -c "
+import json,sys,datetime
+today=datetime.date.today().isoformat()
+for r in json.load(sys.stdin)[:8]:
+    print(r['cycle'], r['eol'], 'SUPPORTED' if str(r['eol'])>today else 'EOL')"
+```
+
+Run this on every sync pass, not just when adding a version.
 
 ## Open items
 
